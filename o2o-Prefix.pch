@@ -1,0 +1,27 @@
+//
+// Prefix header for all source files of the 'o2o' target in the 'o2o' project
+//
+
+#import <Availability.h>
+
+#ifndef __IPHONE_3_0
+#warning "This project uses features only available in iOS SDK 3.0 and later."
+#endif
+
+#ifdef __OBJC__
+    #import <UIKit/UIKit.h>
+    #import <Foundation/Foundation.h>
+
+#import "WeiboSDK.h"
+#import "TopIOSClient.h"
+#import "LNViewController.h"
+#import "Jastor.h"
+#import "JSONKit.h"
+#import "SystemTool.h"
+#import "AppDelegate.h"
+#import "MBProgressHUD.h"
+#import <SDWebImage/UIImageView+WebCache.h>
+
+#define kAppKey         @"3094349739"
+#define kRedirectURI    @"http://www.sina.com"
+#endif
