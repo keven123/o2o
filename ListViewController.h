@@ -11,6 +11,7 @@
 #import "MenuViewController.h"
 #import "LNTableView.h"
 #import "SRRefreshView.h"
+#import "SearchResultViewController.h"
 
 @interface ListViewController : LNViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,SRRefreshDelegate>
 

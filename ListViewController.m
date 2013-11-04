@@ -110,6 +110,7 @@
     [searchText setPlaceholder:@"搜索"];
     searchText.returnKeyType=UIReturnKeySearch;
     searchText.delegate = self;
+    searchText.clearButtonMode = UITextFieldViewModeWhileEditing;
     [searchText setFont:[UIFont systemFontOfSize:13.5f]];
     UIView *titleView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 44)];
     
@@ -167,6 +168,13 @@
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
     [textField resignFirstResponder];
+    SearchResultViewController *vc = [[SearchResultViewController alloc]init];
+    NSLog(@"Text:%@",textField.text);
+    vc.searchStr = textField.text;
+    LNNavViewController *nv = [[LNNavViewController alloc]initWithRootViewController:vc];
+    AppDelegate *app = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    app.viewController.modalPresentationStyle = UIModalPresentationPageSheet;
+    [app.viewController presentViewController:nv animated:YES completion:nil];
     return YES;
 }
 
@@ -184,7 +192,6 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSLog(@"跑到这里了");
     static NSString *CustomCellIdentifier = @"myCell";
     CustomCell *cell = [tableView dequeueReusableCellWithIdentifier:CustomCellIdentifier];
     if (cell == nil) {
