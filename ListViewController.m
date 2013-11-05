@@ -12,6 +12,11 @@
 #import "DetailViewController.h"
 
 @interface ListViewController ()
+{
+    BOOL distanceFlag;
+    BOOL priceFlag;
+    BOOL popularFlag;
+}
 
 @end
 
@@ -23,6 +28,9 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
+        distanceFlag = NO;
+        priceFlag = NO;
+        popularFlag = NO;
         // Custom initialization
         //[self.view setBackgroundColor:[UIColor colorWithRed:236.0/255.0 green:97.0/255.0 blue:0.0/255.0 alpha:1]];
     }
@@ -220,19 +228,59 @@
     [distanceBtn setFrame:CGRectMake(0, 0, 106, 26)];
     [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance"] forState:UIControlStateNormal];
     [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance_over"] forState:UIControlStateHighlighted];
+    [distanceBtn addTarget:self action:@selector(orderByDistance:) forControlEvents:UIControlEventTouchUpInside];
     [view addSubview:distanceBtn];
     UIButton *priceBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     [priceBtn setFrame:CGRectMake(106, 0, 107, 26)];
     [priceBtn setBackgroundImage:[UIImage imageNamed:@"price"] forState:UIControlStateNormal];
     [priceBtn setBackgroundImage:[UIImage imageNamed:@"price_over"] forState:UIControlStateHighlighted];
+    [priceBtn addTarget:self action:@selector(orderByPrice:) forControlEvents:UIControlEventTouchUpInside];
     [view addSubview:priceBtn];
     UIButton *popularBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     [popularBtn setFrame:CGRectMake(213, 0, 107, 26)];
     [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular"] forState:UIControlStateNormal];
     [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular_over"] forState:UIControlStateHighlighted];
+    [popularBtn addTarget:self action:@selector(orderByPopular:) forControlEvents:UIControlEventTouchUpInside];
     [view addSubview:popularBtn];
     [self.view addSubview:view];
 }
+
+- (void)orderByDistance:(id)sender
+{
+    UIButton *distanceBtn = (UIButton *)sender;
+    if(distanceFlag){
+        [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance"] forState:UIControlStateNormal];
+        distanceFlag = NO;
+    }else{
+        [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance_over"] forState:UIControlStateNormal];
+        distanceFlag = YES;
+    }
+}
+
+- (void)orderByPrice:(id)sender
+{
+    UIButton *priceBtn = (UIButton *)sender;
+    if(priceFlag){
+        [priceBtn setBackgroundImage:[UIImage imageNamed:@"price"] forState:UIControlStateNormal];
+        priceFlag = NO;
+    }else{
+        [priceBtn setBackgroundImage:[UIImage imageNamed:@"price_over"] forState:UIControlStateNormal];
+        priceFlag = YES;
+    }
+}
+
+- (void)orderByPopular:(id)sender
+{
+    UIButton *popularBtn = (UIButton *)sender;
+    if(popularFlag){
+        [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular"] forState:UIControlStateNormal];
+        popularFlag = NO;
+    }else{
+        [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular_over"] forState:UIControlStateNormal];
+        popularFlag = YES;
+    }
+}
+
 
 #pragma mark - scrollView delegate
 
