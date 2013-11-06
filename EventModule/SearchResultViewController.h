@@ -9,8 +9,10 @@
 #import "LNViewController.h"
 #import "LNTableView.h"
 #import "CustomCell.h"
-@interface SearchResultViewController : LNViewController<UITableViewDataSource,UITableViewDelegate>
+#import <CoreLocation/CoreLocation.h>
+@interface SearchResultViewController : LNViewController<UITableViewDataSource,UITableViewDelegate,CLLocationManagerDelegate>
 @property (nonatomic,strong) ListResultBean *bean;
 @property (nonatomic,strong) LNTableView *listTableView;
 @property (nonatomic,strong) NSString *searchStr;
+@property (nonatomic, strong) CLLocationManager *locationManager;
 @end

@@ -11,6 +11,15 @@
 
 
 @implementation CustomCell
+{
+    UIImageView *_headImage;
+    UIImageView *_smallImage;
+    UILabel *_titleLable;
+    UILabel *_priceLable;
+    UILabel *_contentLable;
+    UILabel *_posLable;
+    UILabel *_commentLable;
+}
 
 @synthesize listBean,leftLabel,inputField,weiboSwitch,delegate,messageBean;
 
@@ -98,22 +107,26 @@
     //头像
     UIImageView *headImage = [[UIImageView alloc]initWithFrame:CGRectMake(10, 16, 63, 63)];
     [headImage setImageWithURL:[NSURL URLWithString:listBean.imgUrl]];
+    _headImage = headImage;
     [self addSubview:headImage];
     //类型小图标
     UIImageView *smallImage = [[UIImageView alloc]initWithFrame:CGRectMake(77, 16, 17, 17)];
     [smallImage setImage:[UIImage imageNamed:@"small1_icon"]];
+    _smallImage = smallImage;
     [self addSubview:smallImage];
     //标题栏
     UILabel *titleLable = [[UILabel alloc]initWithFrame:CGRectMake(96, 14, 163, 20)];
     [titleLable setText:listBean.title];
     [titleLable setFont:[UIFont boldSystemFontOfSize:12.0f]];
     [titleLable setTextColor:[UIColor colorWithRed:235.0f/255.0f green:97.0f/255.0f blue:0.0f/255.0f alpha:1]];
+    _titleLable = titleLable;
     [self addSubview:titleLable];
     //价格标签
     UILabel *priceLable = [[UILabel alloc]initWithFrame:CGRectMake(259, 14, 44, 20)];
     [priceLable setText:[NSString stringWithFormat:@"￥%@",listBean.price]];
     [priceLable setFont:[UIFont boldSystemFontOfSize:12.0f]];
     [priceLable setTextColor:[UIColor colorWithRed:235.0f/255.0f green:97.0f/255.0f blue:0.0f/255.0f alpha:1]];
+    _priceLable = priceLable;
     [self addSubview:priceLable];
     //任务内容标签
     UILabel *contentLable = [[UILabel alloc]initWithFrame:CGRectMake(79, 35, 227, 35)];
@@ -122,6 +135,7 @@
     [contentLable setTextColor:[UIColor colorWithRed:82.0f/255.0f green:82.0f/255.0f blue:82.0f/255.0f alpha:1]];
     contentLable.lineBreakMode = NSLineBreakByWordWrapping;
     [contentLable setNumberOfLines:0];
+    _contentLable = contentLable;
     [self addSubview:contentLable];
     //位置小图标
     UIImageView *posSmallImage = [[UIImageView alloc]initWithFrame:CGRectMake(221, 76, 7, 12)];
@@ -129,9 +143,10 @@
     [self addSubview:posSmallImage];
     //位置标签
     UILabel *posLable = [[UILabel alloc]initWithFrame:CGRectMake(230, 78, 38, 9)];
-    [posLable setText:@"200m"];
+    [posLable setText:[NSString stringWithFormat:@"%@m",listBean.distance]];
     [posLable setFont:[UIFont boldSystemFontOfSize:8.0f]];
     [posLable setTextColor:[UIColor colorWithRed:158.0f/255.0f green:158.0f/255.0f blue:158.0f/255.0f alpha:1]];
+    _posLable = posLable;
     [self addSubview:posLable];
     //评论小图标
     UIImageView *commentSmallImage = [[UIImageView alloc]initWithFrame:CGRectMake(271, 77, 11, 11)];
@@ -142,8 +157,25 @@
     [commentLable setText:listBean.comment];
     [commentLable setFont:[UIFont boldSystemFontOfSize:8.0f]];
     [commentLable setTextColor:[UIColor colorWithRed:158.0f/255.0f green:158.0f/255.0f blue:158.0f/255.0f alpha:1]];
+    _commentLable = commentLable;
     [self addSubview:commentLable];
     [self setBackgroundColor:[UIColor clearColor]];
+    
+    [self addObserver:self forKeyPath:@"listBean" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
+}
+
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if([keyPath isEqualToString:@"listBean"])
+    {
+        [_headImage setImageWithURL:[NSURL URLWithString:listBean.imgUrl]];
+        [_smallImage setImage:[UIImage imageNamed:@"small1_icon"]];
+        [_titleLable setText:listBean.title];
+        [_priceLable setText:[NSString stringWithFormat:@"￥%@",listBean.price]];;
+        [_contentLable setText:listBean.description];
+        [_posLable setText:[NSString stringWithFormat:@"%@m",listBean.distance]];
+        [_commentLable setText:listBean.comment];
+    }
 }
 
 - (void)updateLoadView

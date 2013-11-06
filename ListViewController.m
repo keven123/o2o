@@ -16,13 +16,14 @@
     BOOL distanceFlag;
     BOOL priceFlag;
     BOOL popularFlag;
+    BOOL pullTableIsLoadingMore;
 }
 
 @end
 
 @implementation ListViewController
 
-@synthesize menuVC,listTableView,slimeView,bean;
+@synthesize menuVC,listTableView,slimeView,bean,locationManager;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -31,6 +32,8 @@
         distanceFlag = NO;
         priceFlag = NO;
         popularFlag = NO;
+        
+        
         // Custom initialization
         //[self.view setBackgroundColor:[UIColor colorWithRed:236.0/255.0 green:97.0/255.0 blue:0.0/255.0 alpha:1]];
     }
@@ -153,9 +156,45 @@
     
     [listTableView addSubview:slimeView];
     
+    
+    //启动定位
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDelegate:self];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyBest];
+    [locationManager setDistanceFilter:1000.0f];
+    [locationManager startUpdatingLocation];
+    
     //[listTableView scrollRectToVisible:CGRectMake(0, -32.0f, 0, 0) animated:YES];
-    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no", nil] isUseIndicator:NO];
+    
 	// Do any additional setup after loading the view.
+}
+
+//定位位置成功时回调
+-(void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+{
+    latituduStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.latitude];
+    longitudeStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.longitude];
+    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
+    NSLog(@"经度:%@,纬度:%@",latituduStr,longitudeStr);
+}
+
+//定位发生错误时回调
+- (void)locationManager:(CLLocationManager *)manager
+       didFailWithError:(NSError *)error
+{
+    NSLog(@"%@",error);
+}
+
+//定位功能用户授权状态发生改变
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    NSLog(@"授权状态:%d",status);
+}
+
+- (void)locationManager:(CLLocationManager *)manager
+didFinishDeferredUpdatesWithError:(NSError *)error
+{
+    NSLog(@"%@",error);
 }
 
 - (void)requestFinished:(ASIHTTPRequest *)request
@@ -166,6 +205,18 @@
     NSDictionary *dct = [responseString objectFromJSONString];
     bean = [[ListResultBean alloc]initWithDictionary:dct];
     [listTableView reloadData];
+    [slimeView endRefresh];
+    if (_refreshFooterView == nil) {
+        LoadMoreTableFooterView *footview = [[LoadMoreTableFooterView alloc]initWithFrame:CGRectMake(0.0f, listTableView.bounds.size.height, self.view.frame.size.width, listTableView.bounds.size.height)];
+        footview.delegate = self;
+        [listTableView addSubview:footview];
+        _refreshFooterView = footview;
+    }
+    [_refreshFooterView setFrame:CGRectMake(0.0f, listTableView.bounds.size.height, self.view.frame.size.width, listTableView.bounds.size.height)];
+    if (pullTableIsLoadingMore) {
+        pullTableIsLoadingMore = NO;
+        [_refreshFooterView egoRefreshScrollViewDataSourceDidFinishedLoading:listTableView];
+    }
 }
 
 - (void)requestFailed:(ASIHTTPRequest *)request
@@ -206,9 +257,7 @@
         cell = [[CustomCell alloc]initWithBean:[bean.list objectAtIndex:indexPath.row] indexPath:indexPath style:UITableViewCellStyleDefault reuseIdentifier:CustomCellIdentifier];
         [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     }else{
-        while ([cell.contentView.subviews lastObject] != nil) {
-            [(UIView*)[cell.contentView.subviews lastObject] removeFromSuperview];
-        }
+        cell.listBean = [bean.list objectAtIndex:indexPath.row];
     }
     return cell;
 }
@@ -221,9 +270,32 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)addTypeBtn
+- (void)setPullTableIsLoadingMore:(BOOL)isLoadingMore
 {
-    UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 26)];
+    if(!pullTableIsLoadingMore && isLoadingMore) {
+        // If not allready loading more start refreshing
+        [_refreshFooterView startAnimatingWithScrollView:listTableView];
+        pullTableIsLoadingMore = YES;
+    } else if(pullTableIsLoadingMore && !isLoadingMore) {
+        [_refreshFooterView egoRefreshScrollViewDataSourceDidFinishedLoading:listTableView];
+        pullTableIsLoadingMore = NO;
+    }
+}
+
+#pragma mark -
+#pragma mark Data Source Loading / Reloading Methods
+
+- (void)reloadTableViewDataSource{
+	
+	//  should be calling your tableviews data source model to reload
+	//  put here just for demo
+	NSLog(@"增加");
+	pullTableIsLoadingMore = YES;
+    
+}
+
+- (void)addTypeBtn
+{    UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 26)];
     UIButton *distanceBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     [distanceBtn setFrame:CGRectMake(0, 0, 106, 26)];
     [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance"] forState:UIControlStateNormal];
@@ -255,6 +327,7 @@
         [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance_over"] forState:UIControlStateNormal];
         distanceFlag = YES;
     }
+    [self requestHttpData];
 }
 
 - (void)orderByPrice:(id)sender
@@ -267,6 +340,7 @@
         [priceBtn setBackgroundImage:[UIImage imageNamed:@"price_over"] forState:UIControlStateNormal];
         priceFlag = YES;
     }
+    [self requestHttpData];
 }
 
 - (void)orderByPopular:(id)sender
@@ -279,6 +353,23 @@
         [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular_over"] forState:UIControlStateNormal];
         popularFlag = YES;
     }
+    [self requestHttpData];
+}
+
+- (void)requestHttpData{
+    NSString *distanceStr = [[NSString alloc]init];
+    NSString *priceStr = [[NSString alloc]init];
+    NSString *popularStr = [[NSString alloc]init];
+    if (distanceFlag) {
+        distanceStr = @"1";
+    }
+    if (priceFlag) {
+        priceStr = @"1";
+    }
+    if (popularFlag){
+        popularStr = @"1";
+    }
+    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no",distanceStr,@"distance",priceStr,@"price",popularStr,@"popular",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
 }
 
 
@@ -287,20 +378,27 @@
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
     [slimeView scrollViewDidScroll];
+    [_refreshFooterView egoRefreshScrollViewDidScroll:scrollView];
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
     [slimeView scrollViewDidEndDraging];
+    [_refreshFooterView egoRefreshScrollViewDidEndDragging:scrollView];
 }
 
 #pragma mark - slimeRefresh delegate
 
 - (void)slimeRefreshStartRefresh:(SRRefreshView *)refreshView
 {
-    [slimeView performSelector:@selector(endRefresh)
-                     withObject:nil afterDelay:3
-                        inModes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    [self requestHttpData];
+}
+
+#pragma mark - LoadMoreTableViewDelegate
+
+- (void)loadMoreTableFooterDidTriggerLoadMore:(LoadMoreTableFooterView *)view
+{
+    [self performSelector:@selector(reloadTableViewDataSource) withObject:nil afterDelay:0.0];
 }
 
 

@@ -12,12 +12,19 @@
 #import "LNTableView.h"
 #import "SRRefreshView.h"
 #import "SearchResultViewController.h"
+#import <CoreLocation/CoreLocation.h>
+#import "LoadMoreTableFooterView.h"
 
-@interface ListViewController : LNViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,SRRefreshDelegate>
+@interface ListViewController : LNViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,SRRefreshDelegate,CLLocationManagerDelegate,LoadMoreTableFooterDelegate>
+{
+    NSString *latituduStr;
+    NSString *longitudeStr;
+    LoadMoreTableFooterView *_refreshFooterView;
+}
 
 @property (nonatomic,strong) MenuViewController *menuVC;
 @property (nonatomic,strong) LNTableView *listTableView;
 @property (nonatomic,strong) SRRefreshView *slimeView;
 @property (nonatomic,strong) ListResultBean *bean;
-
+@property (nonatomic, strong) CLLocationManager *locationManager;
 @end

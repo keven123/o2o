@@ -9,15 +9,25 @@
 #import "SearchResultViewController.h"
 
 @interface SearchResultViewController ()
+{
+    BOOL distanceFlag;
+    BOOL priceFlag;
+    BOOL popularFlag;
+    NSString *latituduStr;
+    NSString *longitudeStr;
+}
 
 @end
 
 @implementation SearchResultViewController
-@synthesize listTableView,bean,searchStr;
+@synthesize listTableView,bean,searchStr,locationManager;
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
+        distanceFlag = NO;
+        priceFlag = NO;
+        popularFlag = NO;
         // Custom initialization
         [self addObserver:self forKeyPath:@"searchStr" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     }
@@ -47,6 +57,19 @@
     [listTableView setBackgroundView:nil];
     [self.view addSubview:listTableView];
     
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDelegate:self];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyBest];
+    [locationManager setDistanceFilter:1000.0f];
+    [locationManager startUpdatingLocation];
+    
+}
+
+//定位位置成功时回调
+-(void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+{
+    latituduStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.latitude];
+    longitudeStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.longitude];
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -56,6 +79,61 @@
         [self setTitle:[NSString stringWithFormat:@"搜索\"%@\"",searchStr]];
         [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no",searchStr,@"search", nil] isUseIndicator:NO];
     }
+}
+
+- (void)orderByDistance:(id)sender
+{
+    UIButton *distanceBtn = (UIButton *)sender;
+    if(distanceFlag){
+        [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance"] forState:UIControlStateNormal];
+        distanceFlag = NO;
+    }else{
+        [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance_over"] forState:UIControlStateNormal];
+        distanceFlag = YES;
+    }
+    [self requestHttpData];
+}
+
+- (void)orderByPrice:(id)sender
+{
+    UIButton *priceBtn = (UIButton *)sender;
+    if(priceFlag){
+        [priceBtn setBackgroundImage:[UIImage imageNamed:@"price"] forState:UIControlStateNormal];
+        priceFlag = NO;
+    }else{
+        [priceBtn setBackgroundImage:[UIImage imageNamed:@"price_over"] forState:UIControlStateNormal];
+        priceFlag = YES;
+    }
+    [self requestHttpData];
+}
+
+- (void)orderByPopular:(id)sender
+{
+    UIButton *popularBtn = (UIButton *)sender;
+    if(popularFlag){
+        [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular"] forState:UIControlStateNormal];
+        popularFlag = NO;
+    }else{
+        [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular_over"] forState:UIControlStateNormal];
+        popularFlag = YES;
+    }
+    [self requestHttpData];
+}
+
+- (void)requestHttpData{
+    NSString *distanceStr = [[NSString alloc]init];
+    NSString *priceStr = [[NSString alloc]init];
+    NSString *popularStr = [[NSString alloc]init];
+    if (distanceFlag) {
+        distanceStr = @"1";
+    }
+    if (priceFlag) {
+        priceStr = @"1";
+    }
+    if (popularFlag){
+        popularStr = @"1";
+    }
+    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no",distanceStr,@"distance",priceStr,@"price",popularStr,@"popular",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
 }
 
 
