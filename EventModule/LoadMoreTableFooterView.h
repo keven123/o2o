@@ -45,7 +45,7 @@
 	
 }
 
-@property(nonatomic,assign) id <LoadMoreTableFooterDelegate> delegate;
+@property(nonatomic) id <LoadMoreTableFooterDelegate> delegate;
 
 - (void)egoRefreshScrollViewDidScroll:(UIScrollView *)scrollView;
 - (void)egoRefreshScrollViewDidEndDragging:(UIScrollView *)scrollView;

@@ -7,7 +7,6 @@
 //
 
 #import "CfViewController.h"
-#import "CfListViewController.h"
 #define DISTANCE_X 138.0f
 #define DISTANCE_Y 165.0f
 #define VIEW_WIDTH 114.5f
@@ -137,7 +136,27 @@
 - (void)click:(id)sender
 {
     UIButton *button = (UIButton *)sender;
-    CfListViewController *vc = [[CfListViewController alloc]init];
+    ListViewController *vc = [[ListViewController alloc]init];
+    switch (button.tag) {
+        case 0:
+            vc.title = @"私活外快";
+            vc.style = selfStyle;
+            break;
+        case 1:
+            vc.title = @"二手转让";
+            vc.style = secondStyle;
+            break;
+        case 2:
+            vc.title = @"百科问题";
+            vc.style = problemStyle;
+            break;
+        case 3:
+            vc.title = @"友情帮手";
+            vc.style = friendStyle;
+            break;
+        default:
+            break;
+    }
     [self.navigationController pushViewController:vc animated:YES];
     [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"navb_bg"] forBarMetrics:UIBarMetricsDefault];
     NSLog(@"%d",button.tag);
@@ -152,6 +171,13 @@
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
     [textField resignFirstResponder];
+    SearchResultViewController *vc = [[SearchResultViewController alloc]init];
+    NSLog(@"Text:%@",textField.text);
+    vc.searchStr = textField.text;
+    LNNavViewController *nv = [[LNNavViewController alloc]initWithRootViewController:vc];
+    AppDelegate *app = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    app.viewController.modalPresentationStyle = UIModalPresentationPageSheet;
+    [app.viewController presentViewController:nv animated:YES completion:nil];
     return YES;
 }
 

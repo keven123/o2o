@@ -99,4 +99,36 @@
     return NO;
 }
 
++ (float)getDistance:(float)lat1 lng1:(float)lng1 lat2:(float)lat2 lng2:(float)lng2
+{
+    //地球半径
+    int R = 6378137;
+    //将角度转为弧度
+    float radLat1 = [self radians:lat1];
+    float radLat2 = [self radians:lat2];
+    float radLng1 = [self radians:lng1];
+    float radLng2 = [self radians:lng2];
+    //结果
+    float s = acos(cos(radLat1)*cos(radLat2)*cos(radLng1-radLng2)+sin(radLat1)*sin(radLat2))*R;
+    
+    //精度
+    s = round(s* 10000)/10000;
+    
+    return  round(s);
+}
+
+//将角度转为弧度
++ (float)radians:(float)degrees{
+    return (degrees*3.14159265)/180.0;
+}
+
++ (NSString *)transPerformanceWithDistance:(NSString *)distance
+{
+    float distance_f = [distance floatValue];
+    if (distance_f > 1000) {
+        distance_f = distance_f/1000;
+        return [NSString stringWithFormat:@"%.1fkm",round(distance_f*10)/10];
+    }else return [NSString stringWithFormat:@"%.1fm",distance_f];
+}
+
 @end

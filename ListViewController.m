@@ -16,14 +16,16 @@
     BOOL distanceFlag;
     BOOL priceFlag;
     BOOL popularFlag;
+    int loadNum;
     BOOL pullTableIsLoadingMore;
+    UIView *_titleView;
 }
 
 @end
 
 @implementation ListViewController
 
-@synthesize menuVC,listTableView,slimeView,bean,locationManager;
+@synthesize menuVC,listTableView,slimeView,bean,locationManager,style;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -32,8 +34,7 @@
         distanceFlag = NO;
         priceFlag = NO;
         popularFlag = NO;
-        
-        
+        loadNum = 0;
         // Custom initialization
         //[self.view setBackgroundColor:[UIColor colorWithRed:236.0/255.0 green:97.0/255.0 blue:0.0/255.0 alpha:1]];
     }
@@ -124,7 +125,7 @@
     searchText.clearButtonMode = UITextFieldViewModeWhileEditing;
     [searchText setFont:[UIFont systemFontOfSize:13.5f]];
     UIView *titleView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 44)];
-    
+    _titleView = titleView;
     [searchView addSubview:searchText];
     [titleView addSubview:searchView];
     
@@ -165,7 +166,7 @@
     [locationManager startUpdatingLocation];
     
     //[listTableView scrollRectToVisible:CGRectMake(0, -32.0f, 0, 0) animated:YES];
-    
+    [self addObserver:self forKeyPath:@"style" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
 	// Do any additional setup after loading the view.
 }
 
@@ -174,7 +175,7 @@
 {
     latituduStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.latitude];
     longitudeStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.longitude];
-    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
+    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",EACH_PAGE_NUM,@"no",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
     NSLog(@"经度:%@,纬度:%@",latituduStr,longitudeStr);
 }
 
@@ -203,7 +204,19 @@ didFinishDeferredUpdatesWithError:(NSError *)error
     NSString *responseString = [request responseString];
     NSLog(@"json:%@",responseString);
     NSDictionary *dct = [responseString objectFromJSONString];
-    bean = [[ListResultBean alloc]initWithDictionary:dct];
+    if (pullTableIsLoadingMore) {
+        ListResultBean *_bean = [[ListResultBean alloc]initWithDictionary:dct];
+        if (_bean.result == 0) {
+            NSLog(@"加载更多");
+            NSMutableArray *array = [[NSMutableArray alloc]initWithArray:bean.list];
+            [array addObjectsFromArray:_bean.list];
+            bean.list = array;
+            loadNum += _bean.list.count;
+        }
+    }else{
+        bean = [[ListResultBean alloc]initWithDictionary:dct];
+        loadNum += bean.list.count;
+    }
     [listTableView reloadData];
     [slimeView endRefresh];
     if (_refreshFooterView == nil) {
@@ -212,12 +225,14 @@ didFinishDeferredUpdatesWithError:(NSError *)error
         [listTableView addSubview:footview];
         _refreshFooterView = footview;
     }
-    [_refreshFooterView setFrame:CGRectMake(0.0f, listTableView.bounds.size.height, self.view.frame.size.width, listTableView.bounds.size.height)];
+    float height = MAX(listTableView.bounds.size.height, listTableView.contentSize.height);
+    [_refreshFooterView setFrame:CGRectMake(0.0f, height, self.view.frame.size.width, listTableView.bounds.size.height)];
     if (pullTableIsLoadingMore) {
         pullTableIsLoadingMore = NO;
         [_refreshFooterView egoRefreshScrollViewDataSourceDidFinishedLoading:listTableView];
     }
 }
+
 
 - (void)requestFailed:(ASIHTTPRequest *)request
 {
@@ -291,11 +306,12 @@ didFinishDeferredUpdatesWithError:(NSError *)error
 	//  put here just for demo
 	NSLog(@"增加");
 	pullTableIsLoadingMore = YES;
-    
+    [self requestHttpData];
 }
 
 - (void)addTypeBtn
-{    UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 26)];
+{
+    UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 26)];
     UIButton *distanceBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     [distanceBtn setFrame:CGRectMake(0, 0, 106, 26)];
     [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance"] forState:UIControlStateNormal];
@@ -327,6 +343,7 @@ didFinishDeferredUpdatesWithError:(NSError *)error
         [distanceBtn setBackgroundImage:[UIImage imageNamed:@"distance_over"] forState:UIControlStateNormal];
         distanceFlag = YES;
     }
+    loadNum = 0;
     [self requestHttpData];
 }
 
@@ -340,6 +357,7 @@ didFinishDeferredUpdatesWithError:(NSError *)error
         [priceBtn setBackgroundImage:[UIImage imageNamed:@"price_over"] forState:UIControlStateNormal];
         priceFlag = YES;
     }
+    loadNum = 0;
     [self requestHttpData];
 }
 
@@ -353,6 +371,7 @@ didFinishDeferredUpdatesWithError:(NSError *)error
         [popularBtn setBackgroundImage:[UIImage imageNamed:@"popular_over"] forState:UIControlStateNormal];
         popularFlag = YES;
     }
+    loadNum = 0;
     [self requestHttpData];
 }
 
@@ -369,7 +388,7 @@ didFinishDeferredUpdatesWithError:(NSError *)error
     if (popularFlag){
         popularStr = @"1";
     }
-    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",@"10",@"no",distanceStr,@"distance",priceStr,@"price",popularStr,@"popular",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
+    [self HttpRequest:MAIN_URL params:[NSDictionary dictionaryWithObjectsAndKeys:@"list",@"act",EACH_PAGE_NUM,@"no",[NSString stringWithFormat:@"%d",loadNum],@"fs",distanceStr,@"distance",priceStr,@"price",popularStr,@"popular",latituduStr,@"la",longitudeStr,@"lo", nil] isUseIndicator:NO];
 }
 
 
@@ -391,6 +410,7 @@ didFinishDeferredUpdatesWithError:(NSError *)error
 
 - (void)slimeRefreshStartRefresh:(SRRefreshView *)refreshView
 {
+    loadNum = 0;
     [self requestHttpData];
 }
 

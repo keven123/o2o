@@ -14,7 +14,18 @@
 #import "SearchResultViewController.h"
 #import <CoreLocation/CoreLocation.h>
 #import "LoadMoreTableFooterView.h"
-
+#define EACH_PAGE_NUM @"10"
+enum {
+    //以下是枚举成员 TestA = 0,
+    //@"私活外快";
+    selfStyle = 9,
+    //@"二手转让";
+    secondStyle,
+    //vc.title = @"百科问题";
+    problemStyle,
+    //@"友情帮手";
+    friendStyle,
+};
 @interface ListViewController : LNViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,SRRefreshDelegate,CLLocationManagerDelegate,LoadMoreTableFooterDelegate>
 {
     NSString *latituduStr;
@@ -26,5 +37,6 @@
 @property (nonatomic,strong) LNTableView *listTableView;
 @property (nonatomic,strong) SRRefreshView *slimeView;
 @property (nonatomic,strong) ListResultBean *bean;
+@property (nonatomic) int style;
 @property (nonatomic, strong) CLLocationManager *locationManager;
 @end

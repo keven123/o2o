@@ -16,13 +16,14 @@
 
 @interface DetailViewController (){
     BOOL isLoadComment;
+    UILabel *_posLabel;
 }
 
 @end
 
 @implementation DetailViewController
 
-@synthesize contentView,bean,contentTableView,mapViewController,m_bean;
+@synthesize contentView,bean,contentTableView,mapViewController,m_bean,locationManager;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -52,11 +53,45 @@
     [super viewDidLoad];
     UIBarButtonItem *rightB = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(popEditView:)];
     self.navigationItem.rightBarButtonItem = rightB;
+    
+    //启动定位
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDelegate:self];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyBest];
+    [locationManager setDistanceFilter:1000.0f];
     /*if (!bean) {
         return;
     }*/
 	// Do any additional setup after loading the view.
     
+}
+
+//定位位置成功时回调
+-(void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+{
+    latituduStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.latitude];
+    longitudeStr = [NSString stringWithFormat:@"%3.5f",newLocation.coordinate.longitude];
+    if(_posLabel)[_posLabel setText:[SystemTool transPerformanceWithDistance:[NSString stringWithFormat:@"%f",[SystemTool getDistance:[latituduStr                                                                                                       floatValue] lng1:[longitudeStr floatValue] lat2:[bean.la floatValue] lng2:[bean.lo floatValue]]]]];
+    NSLog(@"经度:%@,纬度:%@",latituduStr,longitudeStr);
+}
+
+//定位发生错误时回调
+- (void)locationManager:(CLLocationManager *)manager
+       didFailWithError:(NSError *)error
+{
+    NSLog(@"%@",error);
+}
+
+//定位功能用户授权状态发生改变
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    NSLog(@"授权状态:%d",status);
+}
+
+- (void)locationManager:(CLLocationManager *)manager
+didFinishDeferredUpdatesWithError:(NSError *)error
+{
+    NSLog(@"%@",error);
 }
 
 - (void)popEditView:(id)sender
@@ -77,10 +112,22 @@
     NSLog(@"json:%@",responseString);
     if (isLoadComment) {
         m_bean = [[MessageBean alloc]initWithDictionary:dct];
+        if (m_bean.comment.count == 0) {
+            UILabel *label = [[UILabel alloc]init];
+            [label setFrame:CGRectMake(4, contentTableView.contentSize.height - 4, SCREEN_WIDTH - 8, 40)];
+            [label.layer setCornerRadius:5];
+            [label setText:@"暂时没人评论,赶紧来抢板凳吧~"];
+            [label setBackgroundColor:[UIColor whiteColor]];
+            [label setTextColor:[UIColor grayColor]];
+            [label setFont:[UIFont systemFontOfSize:12]];
+            [label setTextAlignment:NSTextAlignmentCenter];
+            [contentTableView addSubview:label];
+        }
         [contentTableView reloadData];
     }else{
         bean = [[ListBean alloc]initWithDictionary:[dct objectForKey:@"item"]];
         contentView = [self creatContentView];
+        [locationManager startUpdatingLocation];
         contentTableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
         [contentTableView setDataSource:self];
         [contentTableView setDelegate:self];
@@ -121,11 +168,11 @@
     [infoView addSubview:smallIcon];
     //位置距离
     UILabel *posLabel = [[UILabel alloc]initWithFrame:CGRectMake(96.5f, 65.0f, 34.0f, 14.0f)];
-    [posLabel setText:@"1.2km"];
     [posLabel setBackgroundColor:[UIColor clearColor]];
     [posLabel setFont:[UIFont boldSystemFontOfSize:9.0f]];
     [posLabel setAdjustsFontSizeToFitWidth:YES];
     [posLabel setTextColor:[UIColor whiteColor]];
+    _posLabel = posLabel;
     [infoView addSubview:posLabel];
     //按钮
     UIButton *getBtn = [[UIButton alloc]initWithFrame:CGRectMake(137.0f, 61.0f, 69.5f, 21.0f)];
@@ -163,9 +210,15 @@
     //描述
     UITextView *describeText = [[UITextView alloc]initWithFrame:CGRectMake(0,31.5f,311.5f,50.0f)];
     NSString *str = bean.content;
-    [describeText setBackgroundColor:[UIColor whiteColor]];
     [describeText setTextColor:[UIColor blackColor]];
     [describeText setFont:[UIFont systemFontOfSize:14]];
+    if ([bean.content isEqualToString:@""]) {
+        str = @"这个人很懒，什么信息都没有留下~";
+        [describeText setTextAlignment:NSTextAlignmentCenter];
+        [describeText setTextColor:[UIColor grayColor]];
+        [describeText setFont:[UIFont systemFontOfSize:12]];
+    }
+    [describeText setBackgroundColor:[UIColor whiteColor]];
     [describeText setText:str];
     describeText.userInteractionEnabled = NO;
     CGRect orgRect= describeText.frame;//获取原始UITextView的frame
@@ -253,8 +306,6 @@
     OtherUserViewController *vc = [[OtherUserViewController alloc]init];
     [self.navigationController pushViewController:vc animated:YES];
 }
-
-
 
 - (void)didReceiveMemoryWarning
 {

@@ -44,7 +44,7 @@
         isLoading = NO;
         
         CGFloat midY = PULL_AREA_HEIGTH/2;
-        
+        CGFloat midX = SCREEN_WIDTH/2;
         /* Config Status Updated Label */
 		UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, midY - 10, self.frame.size.width, 20.0f)];
 		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -57,7 +57,7 @@
 		
         /* Config Arrow Image */
 		CALayer *layer = [CALayer layer];
-		layer.frame = CGRectMake(25.0f,midY - 20, 30.0f, 55.0f);
+		layer.frame = CGRectMake(midX - 80,midY - 20, 30.0f, 55.0f);
 		layer.contentsGravity = kCAGravityResizeAspect;
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 40000
 		if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
@@ -69,7 +69,7 @@
 		
         /* Config activity indicator */
 		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:DEFAULT_ACTIVITY_INDICATOR_STYLE];
-		view.frame = CGRectMake(25.0f,midY - 8, 20.0f, 20.0f);
+		view.frame = CGRectMake(midX - 80,midY - 8, 20.0f, 20.0f);
 		[self addSubview:view];
 		_activityView = view;		
 		
@@ -242,12 +242,10 @@
 #pragma mark Dealloc
 
 - (void)dealloc {
-	
 	_delegate=nil;
-	[_activityView release];
-	[_statusLabel release];
-	[_arrowImage release];
-    [super dealloc];
+    _activityView = nil;
+    _statusLabel = nil;
+    _arrowImage = nil;
 }
 
 

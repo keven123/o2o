@@ -7,7 +7,8 @@
 //
 
 #import "LNViewController.h"
-
+#import "SearchResultViewController.h"
+#import "ListViewController.h"
 @interface CfViewController : LNViewController<UITextFieldDelegate>
 
 @end

@@ -143,7 +143,7 @@
     [self addSubview:posSmallImage];
     //位置标签
     UILabel *posLable = [[UILabel alloc]initWithFrame:CGRectMake(230, 78, 38, 9)];
-    [posLable setText:[NSString stringWithFormat:@"%@m",listBean.distance]];
+    [posLable setText:[self transPerformanceWithDistance:listBean.distance]];
     [posLable setFont:[UIFont boldSystemFontOfSize:8.0f]];
     [posLable setTextColor:[UIColor colorWithRed:158.0f/255.0f green:158.0f/255.0f blue:158.0f/255.0f alpha:1]];
     _posLable = posLable;
@@ -173,7 +173,7 @@
         [_titleLable setText:listBean.title];
         [_priceLable setText:[NSString stringWithFormat:@"￥%@",listBean.price]];;
         [_contentLable setText:listBean.description];
-        [_posLable setText:[NSString stringWithFormat:@"%@m",listBean.distance]];
+        [_posLable setText:[self transPerformanceWithDistance:listBean.distance]];
         [_commentLable setText:listBean.comment];
     }
 }
@@ -302,6 +302,20 @@
     [super setSelected:selected animated:animated];
 
     // Configure the view for the selected state
+}
+
+- (NSString *)transPerformanceWithDistance:(NSString *)distance
+{
+    float distance_f = [distance floatValue];
+    if (distance_f > 1000) {
+        distance_f = distance_f/1000;
+        return [NSString stringWithFormat:@"%.1fkm",round(distance_f*10)/10];
+    }else return [NSString stringWithFormat:@"%.1fm",distance_f];
+}
+
+- (void)dealloc
+{
+    [self removeObserver:self forKeyPath:@"listBean" context:NULL];
 }
 
 @end

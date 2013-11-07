@@ -308,13 +308,11 @@
 #pragma mark Dealloc
 
 - (void)dealloc {
-	
 	_delegate=nil;
-	[_activityView release];
-	[_statusLabel release];
-	[_arrowImage release];
-	[_lastUpdatedLabel release];
-    [super dealloc];
+    _activityView = nil;
+    _statusLabel = nil;
+    _arrowImage = nil;
+    _lastUpdatedLabel = nil;
 }
 
 
